@@ -100,29 +100,28 @@ class _WeatherPageState extends State<WeatherPage> {
     }
   }
 
-  // weather_page.dart ichida
-
-IconData _getIcon(String main) {
-  final lowerMain = main.toLowerCase();
-
-  if (lowerMain.contains('clear') || lowerMain.contains('ochiq')) {
-    return Icons.wb_sunny;
-  } else if (lowerMain.contains('cloud') || lowerMain.contains('bulut')) {
-    return Icons.cloud;
-  } else if (lowerMain.contains('rain') || lowerMain.contains('yomg\'ir') || lowerMain.contains('jala')) {
-    return Icons.water_drop;
-  } else if (lowerMain.contains('snow') || lowerMain.contains('qor')) {
-    return Icons.ac_unit;
-  } else if (lowerMain.contains('thunder') || lowerMain.contains('momaqaldiroq') || lowerMain.contains('do\'l')) {
-    return Icons.flash_on;
-  } else if (lowerMain.contains('mist') || lowerMain.contains('fog') || lowerMain.contains('tuman')) {
-    return Icons.cloud_queue;
-  } else if (lowerMain.contains('drizzle') || lowerMain.contains('mayda')) {
-    return Icons.grain;
-  } else {
-    return Icons.wb_cloudy;
+  IconData _getIcon(String main) {
+    final lowerMain = main.toLowerCase();
+    
+    if (lowerMain.contains('sunny') || lowerMain.contains('clear') || lowerMain.contains('ochiq')) {
+      return Icons.wb_sunny;
+    } else if (lowerMain.contains('rain') || lowerMain.contains('yomg\'ir')) {
+      return Icons.water_drop;
+    } else if (lowerMain.contains('cloud') || lowerMain.contains('bulut')) {
+      return Icons.cloud;
+    } else if (lowerMain.contains('snow') || lowerMain.contains('qor')) {
+      return Icons.ac_unit;
+    } else if (lowerMain.contains('thunder') || lowerMain.contains('momaqaldiroq')) {
+      return Icons.flash_on;
+    } else if (lowerMain.contains('mist') || lowerMain.contains('fog') || lowerMain.contains('tuman')) {
+      return Icons.cloud_queue;
+    } else if (lowerMain.contains('drizzle')) {
+      return Icons.grain;
+    } else {
+      return Icons.wb_cloudy;
+    }
   }
-}
+
   // ✅ Safe date formatting
   String _formatDate(String dateStr) {
     try {

@@ -13,7 +13,7 @@ class WeatherRemoteDatasource {
     final query = "$lat,$lon"; // yoki "Samarkand"
 
     final url = Uri.parse(
-      '$baseUrl.json?key=c317f74b233c4cacb93132712252701&q=Fergana&days=7&lang=uz',
+      '$baseUrl/current.json?key=$apikey&q=$query&lang=uz',
     );
 
     print('🌍 ===== WEATHERAPI CURRENT REQUEST =====');
