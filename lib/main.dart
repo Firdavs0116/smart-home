@@ -2,16 +2,19 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:smart_home1/core/di/service_locator.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_event.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_state.dart';
 import 'package:smart_home1/features/auth/presentation/screens/signin_page.dart';
-import 'package:smart_home1/home/presentation/home_screen.dart';
+import 'package:smart_home1/features/home/presentation/screens/home_screen.dart';
+import 'package:smart_home1/features/weather/presentation/screens/weather_page.dart';
 import 'package:smart_home1/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Geolocator.requestPermission();
   
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -49,7 +52,7 @@ class MyApp extends StatelessWidget {
                 body: Center(child: CircularProgressIndicator()),
               );
             } else if (state is AuthAuthenticated) {
-              return const HomeScreen();
+              return const WeatherPage();
             } else {
               return const SignInPage();
             }

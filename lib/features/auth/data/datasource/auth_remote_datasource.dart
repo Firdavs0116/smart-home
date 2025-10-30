@@ -55,7 +55,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return UserModel(
         uid: user.uid,
         email: user.email ?? email,
-        name: user.displayName ?? 'User',
+        name: user.displayName?.isNotEmpty == true ? user.displayName! : 'User',
       );
     } on FirebaseAuthException catch (e) {
       String message = 'Authentication failed';
@@ -72,6 +72,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> signUp(String email, String password, String name) async {
+    
     try {
       final userCredential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -88,6 +89,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       // Update display name
       await user.updateDisplayName(name);
+      await user.reload();
 
       // Try to save to Firestore
       try {
@@ -101,7 +103,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         await firestore
             .collection('users')
             .doc(user.uid)
-            .set(userData)
+            .set(userData, SetOptions(merge: true))
             .timeout(const Duration(seconds: 5));
       } catch (e) {
         print('Firestore save failed: $e');

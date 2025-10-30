@@ -4,7 +4,12 @@ import 'package:smart_home1/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_event.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_state.dart';
 import 'package:smart_home1/features/auth/presentation/screens/signin_page.dart';
-import 'package:smart_home1/home/presentation/widgets.dart';
+import 'package:smart_home1/features/home/presentation/widgets.dart';
+import 'package:smart_home1/features/weather/presentation/screens/weather_page.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:smart_home1/features/weather/data/weather_repository/weather_repository_impl.dart';
+import 'package:smart_home1/features/weather/data/weather_remote_datasource/weather_remote_datasource.dart';
+import 'package:smart_home1/features/weather/domain/weather_entities/weather_entity.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +19,62 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  WeatherEntity? currentWeather;
+  bool isWeatherLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    final position = await Geolocator.getCurrentPosition();
+    final repo = WeatherRepositoryImpl(WeatherRemoteDatasource());
+    final weather = await repo.getCurrentWeather(
+      position.latitude,
+      position.longitude,
+
+    );
+
+    print('🌍 [Home] Weather fetched successfully');
+print('🌡️ Temperature: ${weather.temperature}');
+print('🌤️ Description: ${weather.description}');
+
+    setState(() {
+      print("Latitude: ${position.latitude}, Longitude: ${position.longitude}");
+      currentWeather = weather;
+      isWeatherLoading = false;
+
+      print('🎯 [UI] Weather updated on screen');
+    });
+  }
+
+  IconData _getIcon(String main) {
+    switch (main.toLowerCase()) {
+      case 'rain':
+        return Icons.water_drop;
+      case 'clouds':
+        return Icons.cloud;
+      case 'snow':
+        return Icons.ac_unit;
+      case 'clear':
+        return Icons.wb_sunny;
+      default:
+        return Icons.device_thermostat;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
@@ -32,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Container
+                // HEADER
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -49,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Row (Title + Profile)
+                      // HEADER TITLE + PROFILE
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -57,8 +118,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             builder: (context, state) {
                               String userName = "Foydalanuvchi";
                               if (state is AuthAuthenticated) {
-                                userName = state.user.name;
+                                userName = state.user.name.isNotEmpty
+                                    ? state.user.name
+                                    : "Foydalanuvchi";
                               }
+
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -71,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   Text(
-                                    "Xush kelibsiz, $userName",
+                                    "Xush kelibsiz, $userName 👋",
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white70,
@@ -83,7 +147,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Profile page
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -97,7 +160,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     TextButton(
                                       onPressed: () {
                                         Navigator.pop(context);
-                                        context.read<AuthBloc>().add(const SignOutEvent());
+                                        context.read<AuthBloc>().add(
+                                          const SignOutEvent(),
+                                        );
                                       },
                                       child: const Text("Ha"),
                                     ),
@@ -123,49 +188,103 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Weather Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.wb_sunny_outlined,
-                                color: Colors.white,
-                                size: 28,
-                              ),
+                      // WEATHER CARD (HomeScreen ichida)
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const WeatherPage(),
                             ),
-                            const SizedBox(width: 16),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "22°C",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "Tashkent",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
                             ),
-                          ],
+                          ),
+                          child: isWeatherLoading
+                              ? const Center(
+                                  child: SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              : currentWeather == null
+                              ? const Center(
+                                  child: Text(
+                                    "Ob-havo ma'lumoti yo'q",
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                )
+                              : Row(
+                                  children: [
+                                    // Icon
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        _getIcon(currentWeather!.main),
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 16),
+
+                                    // Info
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "${currentWeather!.temperature.toStringAsFixed(0)}°C",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            currentWeather!.description,
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            currentWeather!.cityName,
+                                            style: const TextStyle(
+                                              color: Colors.white60,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Arrow icon
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white70,
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ],
@@ -174,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 24),
 
-                // Rooms Section
+                // ROOMS SECTION
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
@@ -192,9 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              // Add room logic
-                            },
+                            onPressed: () {},
                             icon: const Icon(Icons.add, size: 18),
                             label: const Text("Add Room"),
                             style: ElevatedButton.styleFrom(
@@ -213,7 +330,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Room Cards
                       RoomCard(
                         icon: Icons.chair_outlined,
                         iconColor: Colors.blue.shade600,
@@ -239,7 +355,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Active Devices Section
                       const Text(
                         "Active Devices",
                         style: TextStyle(
@@ -250,7 +365,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Device Cards
                       RoomCard(
                         icon: Icons.lightbulb_outline,
                         iconColor: Colors.amber.shade600,
@@ -258,9 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         subtitle: "Living Room",
                         hasSwitch: true,
                         switchValue: true,
-                        onSwitchChanged: (value) {
-                          // Toggle light
-                        },
+                        onSwitchChanged: (value) {},
                       ),
                       const SizedBox(height: 12),
                       RoomCard(
@@ -270,9 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         subtitle: "Living Room",
                         hasSwitch: true,
                         switchValue: true,
-                        onSwitchChanged: (value) {
-                          // Toggle TV
-                        },
+                        onSwitchChanged: (value) {},
                       ),
                       const SizedBox(height: 12),
                       RoomCard(
@@ -282,9 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         subtitle: "Living Room",
                         hasSwitch: true,
                         switchValue: false,
-                        onSwitchChanged: (value) {
-                          // Toggle thermostat
-                        },
+                        onSwitchChanged: (value) {},
                       ),
                       const SizedBox(height: 20),
                     ],

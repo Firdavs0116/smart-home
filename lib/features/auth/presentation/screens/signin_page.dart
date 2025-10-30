@@ -5,7 +5,7 @@ import 'package:smart_home1/features/auth/presentation/bloc/auth_event.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_state.dart';
 import 'package:smart_home1/features/auth/presentation/screens/password_recovery.dart';
 import 'package:smart_home1/features/auth/presentation/screens/signup_page.dart';
-import 'package:smart_home1/home/presentation/home_screen.dart';
+import 'package:smart_home1/features/home/presentation/screens/home_screen.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
