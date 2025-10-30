@@ -3,115 +3,118 @@ import 'package:http/http.dart' as http;
 import 'package:smart_home1/features/weather/data/weather_models/weather_model.dart';
 
 class WeatherRemoteDatasource {
-  final String apikey = "2a142141c9ea8edbaae881689941c762";
-  
+  // ✅ SIZNING YANGI KEY
+  final String apikey = "c317f74b233c4cacb93132712252701";
+  final String baseUrl = "https://api.weatherapi.com/v1";
+
+  // ✅ Current Weather
   Future<WeatherModel> getCurrentWeather(double lat, double lon) async {
-    final url = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=41.3111&lon=69.2797&appid=2a142141c9ea8edbaae881689941c762&units=metric');
-    
-    print("API URL: $url");
-    print('🔹 [API CALL] Fetching current weather...');
-    print('🔹 URL: $url');
-    final response = await http.get(url);
+    // WeatherAPI.com lat/lon yoki city name qabul qiladi
+    final query = "$lat,$lon"; // yoki "Samarkand"
 
-    print('🔹 [API RESPONSE] Status: ${response.statusCode}');
-    print('🔹 Response body: ${response.body}');
-
-    if(response.statusCode == 200){
-      return WeatherModel.fromCurrentjson(jsonDecode(response.body));
-    }else{
-      throw Exception("Hozirgi ob havo ni yuklashda xatolik");
-    }
-  }
-
-  Future<List<WeatherModel>> get7daysForecast(double lat, double lon) async {
-  // ✅ BEPUL API (5 kun / 3 soat intervali)
-  final url = Uri.parse(
-    'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apikey&units=metric&lang=uz',
-  );
-
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    final cityName = data["city"]["name"] as String;
-    final List list = data["list"] as List;
-
-    // Group by day (3 soatlik ma'lumotlardan kunlik qilish)
-    final Map<String, List<Map<String, dynamic>>> groupedByDay = {};
-
-    for (var item in list) {
-      final dateTime = DateTime.fromMillisecondsSinceEpoch(
-        (item["dt"] as int) * 1000,
-      );
-      final dateKey = "${dateTime.year}-${dateTime.month}-${dateTime.day}";
-
-      if (!groupedByDay.containsKey(dateKey)) {
-        groupedByDay[dateKey] = [];
-      }
-      groupedByDay[dateKey]!.add(item as Map<String, dynamic>);
-    }
-
-    // Har bir kun uchun average hisoblash
-    final List<WeatherModel> dailyForecast = [];
-
-    for (var entry in groupedByDay.entries) {
-      if (dailyForecast.length >= 7) break; // Faqat 7 kun
-
-      final dayData = entry.value;
-
-      // Average temperature
-      final avgTemp = dayData
-              .map((e) => (e["main"]["temp"] as num).toDouble())
-              .reduce((a, b) => a + b) /
-          dayData.length;
-
-      // Min/Max temperature
-      final minTemp = dayData
-          .map((e) => (e["main"]["temp_min"] as num).toDouble())
-          .reduce((a, b) => a < b ? a : b);
-      final maxTemp = dayData
-          .map((e) => (e["main"]["temp_max"] as num).toDouble())
-          .reduce((a, b) => a > b ? a : b);
-
-      // Most common weather condition
-      final weatherDescriptions =
-          dayData.map((e) => e["weather"][0]["description"] as String).toList();
-      final mostCommonDesc = weatherDescriptions.first;
-
-      final weatherMains =
-          dayData.map((e) => e["weather"][0]["main"] as String).toList();
-      final mostCommonMain = weatherMains.first;
-
-      // Average humidity & wind
-      final avgHumidity = dayData
-              .map((e) => (e["main"]["humidity"] as num).toDouble())
-              .reduce((a, b) => a + b) /
-          dayData.length;
-      final avgWind = dayData
-              .map((e) => (e["wind"]["speed"] as num).toDouble())
-              .reduce((a, b) => a + b) /
-          dayData.length;
-
-      dailyForecast.add(
-        WeatherModel(
-          cityName: cityName,
-          date: entry.key,
-          description: mostCommonDesc,
-          temperature: avgTemp,
-          minTemp: minTemp,
-          maxTemp: maxTemp,
-          humidity: avgHumidity,
-          windspeed: avgWind,
-          main: mostCommonMain,
-        ),
-      );
-    }
-
-    return dailyForecast;
-  } else {
-    throw Exception(
-      "7 kunlik ob-havo yuklashda xatolik. Status: ${response.statusCode}",
+    final url = Uri.parse(
+      '$baseUrl.json?key=c317f74b233c4cacb93132712252701&q=Fergana&days=7&lang=uz',
     );
+
+    print('🌍 ===== WEATHERAPI CURRENT REQUEST =====');
+    print('🔗 URL: $url');
+    print('🔑 API KEY: $apikey');
+    print('📍 Query: $query');
+
+    try {
+      final response = await http.get(url);
+
+      print('📡 STATUS CODE: ${response.statusCode}');
+      print('📦 RESPONSE LENGTH: ${response.body.length} chars');
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        print('✅ Current weather parsed successfully!');
+        print('   City: ${json["location"]["name"]}');
+        print('   Temp: ${json["current"]["temp_c"]}°C');
+        
+        return WeatherModel.fromWeatherApiCurrent(json);
+      } else if (response.statusCode == 401) {
+        print('❌ 401 UNAUTHORIZED - API key invalid!');
+        print('🔑 Your key: $apikey');
+        print('💡 Check: https://www.weatherapi.com/my/');
+        throw Exception('API key noto\'g\'ri');
+      } else if (response.statusCode == 400) {
+        print('❌ 400 BAD REQUEST');
+        print('📦 Response: ${response.body}');
+        throw Exception('Noto\'g\'ri so\'rov parametrlari');
+      } else {
+        print('❌ HTTP Error: ${response.statusCode}');
+        print('📦 Response: ${response.body}');
+        throw Exception('Ob-havo yuklashda xatolik: ${response.statusCode}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ ===== ERROR IN getCurrentWeather =====');
+      print('Error: $e');
+      print('StackTrace: $stackTrace');
+      rethrow;
+    }
   }
-}
+
+  // ✅ 7-Day Forecast
+  Future<List<WeatherModel>> get7daysForecast(double lat, double lon) async {
+    final query = "$lat,$lon";
+
+    final url = Uri.parse(
+      '$baseUrl/forecast.json?key=$apikey&q=$query&days=7&lang=uz',
+    );
+
+    print('🌍 ===== WEATHERAPI FORECAST REQUEST =====');
+    print('🔗 URL: $url');
+    print('🔑 API KEY: $apikey');
+    print('📍 Query: $query');
+
+    try {
+      final response = await http.get(url);
+
+      print('📡 STATUS CODE: ${response.statusCode}');
+      print('📦 RESPONSE LENGTH: ${response.body.length} chars');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final location = data["location"] as Map<String, dynamic>;
+        final cityName = location["name"] as String;
+        final forecast = data["forecast"] as Map<String, dynamic>;
+        final forecastDays = forecast["forecastday"] as List;
+
+        print('🏙️  City: $cityName');
+        print('📊 Forecast days: ${forecastDays.length}');
+
+        final List<WeatherModel> dailyForecast = [];
+
+        for (var day in forecastDays) {
+          final model = WeatherModel.fromWeatherApiForecast(
+            day as Map<String, dynamic>,
+            cityName,
+          );
+          dailyForecast.add(model);
+          
+          print('✅ Day ${dailyForecast.length}: ${model.date} - ${model.temperature}°C');
+        }
+
+        print('✅ Successfully parsed ${dailyForecast.length} days forecast');
+        return dailyForecast;
+      } else if (response.statusCode == 401) {
+        print('❌ 401 UNAUTHORIZED');
+        throw Exception('API key noto\'g\'ri');
+      } else if (response.statusCode == 400) {
+        print('❌ 400 BAD REQUEST');
+        print('📦 Response: ${response.body}');
+        throw Exception('Noto\'g\'ri so\'rov');
+      } else {
+        print('❌ HTTP Error: ${response.statusCode}');
+        throw Exception('Forecast yuklashda xatolik: ${response.statusCode}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ ===== ERROR IN get7daysForecast =====');
+      print('Error: $e');
+      print('StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
 }

@@ -5,8 +5,8 @@ class ForecastCard extends StatelessWidget {
   final String temp;
   final String desc;
   final IconData icon;
-  final String? minTemp; // ✅ Min temp qo'shildi
-  final String? maxTemp; // ✅ Max temp qo'shildi
+  final String? minTemp;
+  final String? maxTemp;
 
   const ForecastCard({
     super.key,
@@ -22,7 +22,7 @@ class ForecastCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -34,7 +34,7 @@ class ForecastCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: _getIconColor(icon).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -96,10 +96,37 @@ class ForecastCard extends StatelessWidget {
   }
 
   Color _getIconColor(IconData icon) {
-    if (icon == Icons.wb_sunny) return Colors.amber;
-    if (icon == Icons.cloud) return Colors.grey;
-    if (icon == Icons.water_drop) return Colors.blue;
-    if (icon == Icons.ac_unit) return Colors.lightBlue;
-    return Colors.grey;
+    if (icon == Icons.wb_sunny) return Colors.amber.shade600;
+    if (icon == Icons.cloud) return Colors.grey.shade600;
+    if (icon == Icons.water_drop) return Colors.blue.shade600;
+    if (icon == Icons.ac_unit) return Colors.lightBlue.shade400;
+    if (icon == Icons.flash_on) return Colors.yellow.shade700;
+    if (icon == Icons.grain) return Colors.blue.shade400;
+    return Colors.grey.shade600;
   }
 }
+// ```
+
+// ---
+
+// ## 🔧 **LOG'LARNI KO'RISH**
+
+// ### **Android Studio:**
+// ```
+// 1. Terminal'da ishga tushiring:
+//    flutter run
+
+// 2. Konsolda LOG'lar paydo bo'ladi:
+//    🌍 ===== CURRENT WEATHER REQUEST =====
+//    📡 STATUS CODE: 200
+//    ✅ Current weather loaded!
+
+// 3. Filter qiling (optional):
+//    Android Studio → Logcat → Filter: "flutter"
+// ```
+
+// ### **VS Code:**
+// ```
+// 1. Terminal → Debug Console
+// 2. Run qiling: flutter run
+// 3. Barcha log'lar ko'rinadi

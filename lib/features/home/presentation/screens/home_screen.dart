@@ -44,12 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final weather = await repo.getCurrentWeather(
       position.latitude,
       position.longitude,
-
     );
 
     print('🌍 [Home] Weather fetched successfully');
-print('🌡️ Temperature: ${weather.temperature}');
-print('🌤️ Description: ${weather.description}');
+    print('🌡️ Temperature: ${weather.temperature}');
+    print('🌤️ Description: ${weather.description}');
 
     setState(() {
       print("Latitude: ${position.latitude}, Longitude: ${position.longitude}");
@@ -60,21 +59,31 @@ print('🌤️ Description: ${weather.description}');
     });
   }
 
-  IconData _getIcon(String main) {
-    switch (main.toLowerCase()) {
-      case 'rain':
-        return Icons.water_drop;
-      case 'clouds':
-        return Icons.cloud;
-      case 'snow':
-        return Icons.ac_unit;
-      case 'clear':
-        return Icons.wb_sunny;
-      default:
-        return Icons.device_thermostat;
-    }
-  }
+  // home_screen.dart ichida
 
+// weather_page.dart ichida
+
+IconData _getIcon(String main) {
+  final lowerMain = main.toLowerCase();
+
+  if (lowerMain.contains('clear') || lowerMain.contains('ochiq')) {
+    return Icons.wb_sunny;
+  } else if (lowerMain.contains('cloud') || lowerMain.contains('bulut')) {
+    return Icons.cloud;
+  } else if (lowerMain.contains('rain') || lowerMain.contains('yomg\'ir') || lowerMain.contains('jala')) {
+    return Icons.water_drop;
+  } else if (lowerMain.contains('snow') || lowerMain.contains('qor')) {
+    return Icons.ac_unit;
+  } else if (lowerMain.contains('thunder') || lowerMain.contains('momaqaldiroq') || lowerMain.contains('do\'l')) {
+    return Icons.flash_on;
+  } else if (lowerMain.contains('mist') || lowerMain.contains('tuman') || lowerMain.contains('tuman')) {
+    return Icons.cloud_queue;
+  } else if (lowerMain.contains('drizzle') || lowerMain.contains('mayda')) {
+    return Icons.grain;
+  } else {
+    return Icons.wb_cloudy;
+  }
+}
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(

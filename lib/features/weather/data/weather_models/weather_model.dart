@@ -13,42 +13,55 @@ class WeatherModel extends WeatherEntity {
     required super.main,
   });
 
-  // Current Weather (api.openweathermap.org/data/2.5/weather)
-  factory WeatherModel.fromCurrentjson(Map<String, dynamic> json) {
+  // ✅ Current Weather (WeatherAPI.com format)
+  factory WeatherModel.fromWeatherApiCurrent(Map<String, dynamic> json) {
+    print('📦 Parsing WeatherAPI Current:');
+    print('   Location: ${json["location"]}');
+    print('   Current: ${json["current"]}');
+
+    final location = json["location"] as Map<String, dynamic>;
+    final current = json["current"] as Map<String, dynamic>;
+    final condition = current["condition"] as Map<String, dynamic>;
+
     return WeatherModel(
-      cityName: json["name"] as String,
-      date: DateTime.now().toIso8601String(),
-      description: json["weather"][0]["description"] as String,
-      temperature: (json["main"]["temp"] as num).toDouble(),
-      minTemp: (json["main"]["temp_min"] as num).toDouble(), // ✅ TUZATILDI
-      maxTemp: (json["main"]["temp_max"] as num).toDouble(), // ✅ TUZATILDI
-      humidity: (json["main"]["humidity"] as num).toDouble(),
-      windspeed: (json["wind"]["speed"] as num).toDouble(),
-      main: json["weather"][0]["main"] as String,
+      cityName: location["name"] as String,
+      date: location["localtime"] as String,
+      description: condition["text"] as String,
+      temperature: (current["temp_c"] as num).toDouble(),
+      minTemp: (current["temp_c"] as num).toDouble(), // Current'da min/max yo'q
+      maxTemp: (current["temp_c"] as num).toDouble(),
+      humidity: (current["humidity"] as num).toDouble(),
+      windspeed: (current["wind_kph"] as num).toDouble(),
+      main: condition["text"] as String, // "Sunny", "Cloudy", etc.
     );
   }
 
-  // 7-Day Forecast (api.openweathermap.org/data/2.5/onecall)
-  factory WeatherModel.fromDailyJson(
+  // ✅ Forecast (WeatherAPI.com format)
+  factory WeatherModel.fromWeatherApiForecast(
     Map<String, dynamic> json,
     String cityName,
   ) {
+    print('📦 Parsing WeatherAPI Forecast Day:');
+    print('   Date: ${json["date"]}');
+    print('   Day: ${json["day"]}');
+
+    final day = json["day"] as Map<String, dynamic>;
+    final condition = day["condition"] as Map<String, dynamic>;
+
     return WeatherModel(
       cityName: cityName,
-      date: DateTime.fromMillisecondsSinceEpoch(
-        (json["dt"] as int) * 1000,
-      ).toIso8601String(),
-      description: json["weather"][0]["description"] as String,
-      temperature: (json["temp"]["day"] as num).toDouble(),
-      minTemp: (json["temp"]["min"] as num).toDouble(),
-      maxTemp: (json["temp"]["max"] as num).toDouble(),
-      humidity: (json["humidity"] as num).toDouble(),
-      windspeed: (json["wind_speed"] as num).toDouble(),
-      main: json["weather"][0]["main"] as String, // ✅ TUZATILDI (wather → weather)
+      date: json["date"] as String,
+      description: condition["text"] as String,
+      temperature: (day["avgtemp_c"] as num).toDouble(),
+      minTemp: (day["mintemp_c"] as num).toDouble(),
+      maxTemp: (day["maxtemp_c"] as num).toDouble(),
+      humidity: (day["avghumidity"] as num).toDouble(),
+      windspeed: (day["maxwind_kph"] as num).toDouble(),
+      main: condition["text"] as String,
     );
   }
 
-  // CopyWith (optional, lekin foydali)
+  // CopyWith
   WeatherModel copyWith({
     String? cityName,
     String? date,
@@ -71,5 +84,20 @@ class WeatherModel extends WeatherEntity {
       windspeed: windspeed ?? this.windspeed,
       main: main ?? this.main,
     );
+  }
+
+  // ToJson
+  Map<String, dynamic> toJson() {
+    return {
+      'cityName': cityName,
+      'date': date,
+      'description': description,
+      'temperature': temperature,
+      'minTemp': minTemp,
+      'maxTemp': maxTemp,
+      'humidity': humidity,
+      'windspeed': windspeed,
+      'main': main,
+    };
   }
 }

@@ -9,8 +9,12 @@ import 'package:smart_home1/features/auth/presentation/bloc/auth_event.dart';
 import 'package:smart_home1/features/auth/presentation/bloc/auth_state.dart';
 import 'package:smart_home1/features/auth/presentation/screens/signin_page.dart';
 import 'package:smart_home1/features/home/presentation/screens/home_screen.dart';
-import 'package:smart_home1/features/weather/presentation/screens/weather_page.dart';
 import 'package:smart_home1/firebase_options.dart';
+
+
+import 'package:intl/intl.dart'; // ✅ 
+import 'package:intl/date_symbol_data_local.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +23,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+   await initializeDateFormatting('uz_UZ', null);
+
+   Intl.defaultLocale = 'uz_UZ';
 
   // Firestore settings
   FirebaseFirestore.instance.settings = const Settings(
@@ -52,7 +60,7 @@ class MyApp extends StatelessWidget {
                 body: Center(child: CircularProgressIndicator()),
               );
             } else if (state is AuthAuthenticated) {
-              return const WeatherPage();
+              return const HomeScreen();
             } else {
               return const SignInPage();
             }
